@@ -1,98 +1,104 @@
 package fullcontact
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
 
-const (
-	defaultEndpoint = "https://api.fullcontact.com/v2"
-)
-
 var (
+	// FullContact API
+	defaultEndpoint = "https://api.fullcontact.com/v2"
+	// MaxIdleConnections for shared http client
 	MaxIdleConnections = 10
-	RequestTimeout     = 60
-
-	errUnknown = fmt.Errorf("Error unknown")
-	status400  = fmt.Errorf("Your request was malformed.")
-	status403  = fmt.Errorf("Your API key is invalid, missing, or has exceeded its quota. **Paid plans will not receive a 403 response when they exceed their alotted matches. They will only receive a 403 for exceeding rate limit quotas.")
-	status404  = fmt.Errorf("This person was searched in the past 24 hours and nothing was found.")
-	status405  = fmt.Errorf("You have queried the API with an unsupported HTTP method. Retry your query with either GET or POST.")
-	status410  = fmt.Errorf("This resource cannot be found. You will receive this status code if you attempt to query our deprecated V1 endpoints.")
-	status422  = fmt.Errorf("Invalid or missing API query parameter.")
-	status500  = fmt.Errorf("There was an unexpected error on our server. If you see this please contact support@fullcontact.com.")
-	status503  = fmt.Errorf("There is a transient downstream error condition. We include a 'Retry-After' header dictating when to attempt the call again.")
+	// RequestTimeout for shared http client
+	RequestTimeout = 60
 )
 
+// Client for fullcontact-go
 type Client struct {
 	apikey     string
 	httpClient *http.Client
-}
+	limit      *RateLimit
 
-func NewClient(apikey string) (client *Client, err error) {
-	client = &Client{apikey: apikey}
-	err = client.createHTTPClient()
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
+	Account *AccountAPI
+	Email   *EmailAPI
+	Person  *PersonAPI
+	Company *CompanyAPI
 }
 
 func (c *Client) configure() (err error) {
-	err = c.createHTTPClient()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Client) createHTTPClient() error {
 	c.httpClient = &http.Client{
 		Transport: &http.Transport{
 			MaxIdleConnsPerHost: MaxIdleConnections,
 		},
 		Timeout: time.Duration(RequestTimeout) * time.Second,
 	}
+	c.limit = &RateLimit{}
+	c.Account = &AccountAPI{c}
+	c.Email = &EmailAPI{c}
+	c.Person = &PersonAPI{c}
+	c.Company = &CompanyAPI{c}
 	return nil
 }
 
-type Webhook struct {
-	ID  string `json:"webhookId"`
-	URL string `json:"webhookUrl"`
+// NewClient returns a client for fullcontact-go
+func NewClient(apikey string) (client *Client, err error) {
+	client = &Client{apikey: apikey}
+	err = client.configure()
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }
 
-func NewWebhook(url string, opts ...string) (webhook *Webhook, err error) {
-	id := ""
-	if url == "" {
-		return nil, fmt.Errorf("Missing Required URL")
+func (c *Client) do(r *http.Request) (*http.Response, error) {
+	resp, err := c.httpClient.Do(r)
+	if err != nil {
+		return nil, fmt.Errorf("%s. HTTP Response: %s", errUnknown, err.Error())
 	}
-	if len(opts) == 1 {
-		id = opts[0]
+	c.limit.Limit, _ = strconv.ParseInt(resp.Header.Get("X-Rate-Limit-Limit"), 0, 64)
+	c.limit.Remaining, _ = strconv.ParseInt(resp.Header.Get("X-Rate-Limit-Remaining"), 0, 64)
+	c.limit.Reset, _ = strconv.ParseInt(resp.Header.Get("X-Rate-Limit-Reset"), 0, 64)
+	c.limit.Updated = time.Now().UTC()
+	if resp.StatusCode == 400 {
+		return nil, errStatus400
 	}
-	return &Webhook{ID: id, URL: url}, nil
+	if resp.StatusCode == 403 {
+		return nil, fmt.Errorf("%s: Rate Limit Hit. Please wait %d seconds before trying again", libraryName, c.limit.Reset)
+	}
+	if resp.StatusCode == 404 {
+		return nil, errStatus404
+	}
+	if resp.StatusCode == 405 {
+		return nil, errStatus405
+	}
+	if resp.StatusCode == 410 {
+		return nil, fmt.Errorf("%s. Please contact github.com/Abramovic to update the library", errStatus410)
+	}
+	if resp.StatusCode == 422 {
+		return nil, errStatus422
+	}
+	if resp.StatusCode == 500 {
+		return nil, errStatus500
+	}
+	if resp.StatusCode == 503 {
+		// FullContact does not document the specific header (is it X-Retry-After?), only that it contains 'Retry-After'
+		for header, _ := range resp.Header {
+			if strings.Contains(header, "Retry-After") {
+				return nil, fmt.Errorf("%s. Retry After: %s", errStatus503, resp.Header.Get(header))
+			}
+		}
+		return nil, errStatus503
+	}
+	return resp, nil
 }
 
-func (c *Client) Person(search, value string, webhook *Webhook) (*PersonResponse, error) {
-	search = strings.ToLower(search)
-	switch search {
-	case "email":
-		search = "email"
-	case "phone":
-		search = "phone"
-	case "twitter":
-		search = "twitter"
-	default:
-		return nil, fmt.Errorf("Unknown search type: %s", search)
-	}
-	if value == "" {
-		return nil, fmt.Errorf("Missing lookup value")
-	}
-
-	fullURL := fmt.Sprintf("%s/%s?%s=%s", defaultEndpoint, "person.json", search, url.QueryEscape(value))
+func (c *Client) get(search, value, endPoint string, webhook *Webhook) (*http.Request, error) {
+	fullURL := fmt.Sprintf("%s/%s?%s=%s", defaultEndpoint, fmt.Sprintf("%s.json", endPoint), search, url.QueryEscape(value))
 	if webhook != nil && webhook.URL != "" {
 		fullURL = fmt.Sprintf("%s&webhookUrl=%s", fullURL, url.QueryEscape(webhook.URL))
 		if webhook.ID != "" {
@@ -104,18 +110,5 @@ func (c *Client) Person(search, value string, webhook *Webhook) (*PersonResponse
 		return nil, err
 	}
 	r.Header.Set("X-FullContact-APIKey", c.apikey)
-
-	resp, err := c.httpClient.Do(r)
-	if err != nil {
-		return nil, err
-	}
-
-	var response PersonResponse
-	decoder := json.NewDecoder(resp.Body)
-	defer resp.Body.Close()
-	err = decoder.Decode(&response)
-	if err != nil {
-		return nil, err
-	}
-	return &response, nil
+	return r, nil
 }
