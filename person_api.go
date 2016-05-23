@@ -33,6 +33,7 @@ func (c *PersonAPI) search(search, value string, webhook *Webhook) (*PersonRespo
 	if err != nil {
 		return nil, err
 	}
+
 	resp, err := c.do(r)
 	if err != nil {
 		return nil, err
@@ -44,6 +45,9 @@ func (c *PersonAPI) search(search, value string, webhook *Webhook) (*PersonRespo
 	err = decoder.Decode(&response)
 	if err != nil {
 		return nil, err
+	}
+	if search == "email" {
+		response.Email = value
 	}
 	return &response, nil
 }

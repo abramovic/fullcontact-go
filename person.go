@@ -1,9 +1,6 @@
 package fullcontact
 
-import (
-	"encoding/json"
-	"fmt"
-)
+import ()
 
 // PersonResponse is the response from FullContact's Person API
 /*
@@ -130,6 +127,7 @@ type PersonResponse struct {
 	Demographics     PersonDemographics     `json:"demographics"`
 	SocialProfiles   []SocialProfile        `json:"socialProfiles"`
 	DigitalFootprint PersonDigitalFootprint `json:"digitalFootprint"`
+	Email            string                 `json:"email"`
 }
 
 // PersonPhoto is a sub-model of PersonResponse
@@ -194,18 +192,7 @@ type LocationPart struct {
 
 // SocialProfile is a sub-model of PersonResponse
 type SocialProfile struct {
-	ID string `json:"id"`
-	SocialProfileShared
-}
-
-// SocialProfileinterface is used because FullContact uses both ints and strings
-type SocialProfileinterface struct {
-	ID interface{} `json:"id"`
-	SocialProfileShared
-}
-
-// SocialProfileShared are the attributes that have shown to be consistent with SocialProfile
-type SocialProfileShared struct {
+	ID        int64  `json:"id,string"`
 	Type      string `json:"type"`
 	TypeID    string `json:"typeId"`
 	TypeName  string `json:"typeName"`
@@ -215,65 +202,6 @@ type SocialProfileShared struct {
 	Followers int64  `json:"followers"`
 	Following int64  `json:"following"`
 	RSS       string `json:"rss"`
-}
-
-// UnmarshalJSON needs to be refactored. It does what it can to ensure that the ID is always a string
-func (s *SocialProfile) UnmarshalJSON(data []byte) error {
-	var aux SocialProfileinterface
-	err := json.Unmarshal(data, &aux)
-	if err != nil {
-		return err
-	}
-
-	// TODO: we can clean this up
-	s.Type = aux.Type
-	s.TypeID = aux.TypeID
-	s.TypeName = aux.TypeName
-	s.URL = aux.URL
-	s.Username = aux.Username
-	s.Bio = aux.Bio
-	s.Followers = aux.Followers
-	s.Following = aux.Following
-	s.RSS = aux.RSS
-
-	// FullContact is not consistent between "type" and  "typeId"
-	if s.Type == "" {
-		s.Type = s.TypeID
-	}
-	if s.TypeID == "" {
-		s.TypeID = s.Type
-	}
-
-	// FullContact is not consistent with giving us the same ID type
-	if value, ok := aux.ID.(string); ok {
-		s.ID = value
-		return nil
-	}
-	if value, ok := aux.ID.(uint); ok {
-		s.ID = fmt.Sprintf("%d", value)
-		return nil
-	}
-	if value, ok := aux.ID.(int); ok {
-		s.ID = fmt.Sprintf("%d", value)
-		return nil
-	}
-	if value, ok := aux.ID.(int32); ok {
-		s.ID = fmt.Sprintf("%d", value)
-		return nil
-	}
-	if value, ok := aux.ID.(int64); ok {
-		s.ID = fmt.Sprintf("%d", value)
-		return nil
-	}
-	if value, ok := aux.ID.(float32); ok {
-		s.ID = fmt.Sprintf("%d", int64(value))
-		return nil
-	}
-	if value, ok := aux.ID.(float64); ok {
-		s.ID = fmt.Sprintf("%d", int64(value))
-		return nil
-	}
-	return fmt.Errorf("Could not convert primary ID %v", aux.ID)
 }
 
 // PersonDigitalFootprint is a sub-model of PersonResponse

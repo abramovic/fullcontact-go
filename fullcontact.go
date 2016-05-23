@@ -10,8 +10,6 @@ import (
 )
 
 var (
-	// FullContact API
-	defaultEndpoint = "https://api.fullcontact.com/v2"
 	// MaxIdleConnections for shared http client
 	MaxIdleConnections = 10
 	// RequestTimeout for shared http client
@@ -98,14 +96,21 @@ func (c *Client) do(r *http.Request) (*http.Response, error) {
 }
 
 func (c *Client) get(search, value, endPoint string, webhook *Webhook) (*http.Request, error) {
-	fullURL := fmt.Sprintf("%s/%s?%s=%s", defaultEndpoint, fmt.Sprintf("%s.json", endPoint), search, url.QueryEscape(value))
+	u := &url.URL{
+		Scheme: "https",
+		Host:   "api.fullcontact.com",
+		Path:   fmt.Sprintf("v2/%s.json", endPoint),
+	}
+	q := u.Query()
+	q.Set(search, value)
 	if webhook != nil && webhook.URL != "" {
-		fullURL = fmt.Sprintf("%s&webhookUrl=%s", fullURL, url.QueryEscape(webhook.URL))
+		q.Set("webhookUrl", url.QueryEscape(webhook.URL))
 		if webhook.ID != "" {
-			fullURL = fmt.Sprintf("%s&webhookId=%s", fullURL, url.QueryEscape(webhook.ID))
+			q.Set("webhookId", url.QueryEscape(webhook.ID))
 		}
 	}
-	r, err := http.NewRequest("GET", fullURL, nil)
+	u.RawQuery = q.Encode()
+	r, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
