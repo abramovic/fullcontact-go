@@ -2,20 +2,21 @@ package main
 
 import (
 	"fmt"
-	"github.com/Abramovic/fullcontact-go"
 	"log"
+
+	"github.com/Abramovic/fullcontact-go"
 )
 
 func main() {
-	client, err := fullcontact.NewClient("my-api-key")
+	client, err := fullcontact.NewClient("")
 	fatalOnError(err)
 
 	// Webhook is optional.
 	webhook, err := fullcontact.NewWebhook("http://your-web-hook.url/", "ID-123")
 	fatalOnError(err)
 
-	// Look up john@example.com by email address
-	result, err := client.Person.Email("john@example.com", webhook)
+	// Look up bart@fullcontact.com by email address
+	result, err := client.Person.Email("bart@fullcontact.com", nil)
 	fatalOnError(err)
 
 	fmt.Println(result)

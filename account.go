@@ -25,12 +25,12 @@ package fullcontact
 */
 type AccountResponse struct {
 	ID               string          `json:"applicationId"`
-	Status           int64           `json:"status"`
+	Status           int             `json:"status"`
 	PeriodStart      string          `json:"periodStart"`
 	PeriodEnd        string          `json:"periodEnd"`
 	PlanName         string          `json:"plan"`
-	PlanBasePrice    int64           `json:"planBasePrice"`
-	PlanOveragePrice int64           `json:"planOveragePrice"`
+	PlanBasePrice    float64         `json:"planBasePrice"`
+	PlanOveragePrice float64         `json:"planOveragePrice"`
 	Metrics          []AccountMetric `json:"metrics"`
 }
 

@@ -1,6 +1,9 @@
 package fullcontact
 
-import ()
+import (
+	"fmt"
+	"strconv"
+)
 
 // PersonResponse is the response from FullContact's Person API
 /*
@@ -118,7 +121,7 @@ import ()
 }
 */
 type PersonResponse struct {
-	Status           int64                  `json:"status"`
+	Status           float64                `json:"status"`
 	RequestID        string                 `json:"requestId"`
 	Likelidhood      float64                `json:"likelihood"`
 	Photos           []PersonPhoto          `json:"photos"`
@@ -127,7 +130,16 @@ type PersonResponse struct {
 	Demographics     PersonDemographics     `json:"demographics"`
 	SocialProfiles   []SocialProfile        `json:"socialProfiles"`
 	DigitalFootprint PersonDigitalFootprint `json:"digitalFootprint"`
-	Email            string                 `json:"email"`
+}
+
+// social returns back a social profile that matches the platform name
+func (self *PersonResponse) social(platform string) SocialProfile {
+	for _, profile := range self.SocialProfiles {
+		if profile.Type == platform {
+			return profile
+		}
+	}
+	return SocialProfile{}
 }
 
 // PersonPhoto is a sub-model of PersonResponse
@@ -192,16 +204,32 @@ type LocationPart struct {
 
 // SocialProfile is a sub-model of PersonResponse
 type SocialProfile struct {
-	ID        int64  `json:"id,string"`
-	Type      string `json:"type"`
-	TypeID    string `json:"typeId"`
-	TypeName  string `json:"typeName"`
-	URL       string `json:"url"`
-	Username  string `json:"username"`
-	Bio       string `json:"bio"`
-	Followers int64  `json:"followers"`
-	Following int64  `json:"following"`
-	RSS       string `json:"rss"`
+	ID        SocialID `json:"id"`
+	Type      string   `json:"typeId"`
+	TypeName  string   `json:"typeName"`
+	URL       string   `json:"url"`
+	Username  string   `json:"username"`
+	Bio       string   `json:"bio"`
+	Followers float64  `json:"followers"`
+	Following float64  `json:"following"`
+	RSS       string   `json:"rss"`
+}
+
+type SocialID string
+
+// MarshalJSON takes SocialID and turns into a string
+func (s SocialID) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%v"`, s)), nil
+}
+
+// UnmarshalJSON takes an interface and turns a SocialID
+func (s *SocialID) UnmarshalJSON(b []byte) error {
+	str, err := strconv.Unquote(string(b))
+	if err != nil {
+		str = string(b)
+	}
+	*s = SocialID(str)
+	return nil
 }
 
 // PersonDigitalFootprint is a sub-model of PersonResponse

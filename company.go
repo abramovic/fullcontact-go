@@ -80,9 +80,9 @@ package fullcontact
 }
 */
 type CompanyResponse struct {
-	Status         int64           `json:"status"`
+	Status         float64         `json:"status"`
 	RequestID      string          `json:"requestId"`
-	Category       Category        `json:"category"`
+	Category       []Category      `json:"category"`
 	Logo           string          `json:"logo"`
 	Website        string          `json:"website"`
 	Locale         string          `json:"languageLocale"`
@@ -100,7 +100,7 @@ type Category struct {
 // Organization is a sub-model of CompanyResponse
 type Organization struct {
 	Name        string                  `json:"name"`
-	Employees   int64                   `json:"approxEmployees"`
+	Employees   float64                 `json:"approxEmployees"`
 	Founded     string                  `json:"founded"` // ISO 8601 Date
 	Overview    string                  `json:"overview"`
 	ContactInfo OrganizationContactInfo `json:"contactInfo"`
@@ -173,6 +173,6 @@ type Traffic struct {
 
 // LocaleRank is a sub-model of Traffic
 type LocaleRank struct {
-	Rank   int64  `json:"rank"`
-	Locale string `json:"locale"`
+	Rank   float64 `json:"rank"`
+	Locale string  `json:"locale"`
 }

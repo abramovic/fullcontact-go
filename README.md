@@ -119,24 +119,3 @@ if err != nil {
   log.Fatal(err)
 }
 ```
-
-## Email API
-
-```go
-  client.Email.Get(string, *fullcontact.Webhook) (*fullcontact.EmailResponse, error)
-```
-
-You can identify disposable email addresses and one time use email addresses. FullContact's API detects known domains associated with disposable email addresses, and in addition detects sub addressing for domains where the behavior is known.
-
-```go
-email, err := client.Email.Get("john@gmail.com")
-if err != nil {
-  log.Fatal(err)
-}
-```
-
-## Icon API (Deprecated)
-
-Not implemented.
-
-FullContact will discontinue using this API on May 24th, 2016.

@@ -14,19 +14,5 @@ type RateLimit struct {
 
 // RateLimit returns the current rate limit information.
 func (c *Client) RateLimit() RateLimit {
-	if c.limit != nil {
-		return *c.limit
-	}
-	account, err := c.Account.Get()
-	if err != nil {
-		return RateLimit{}
-	}
-	c.limit = &RateLimit{}
-	for _, metric := range account.Metrics {
-		if metric.PlanLevel > 0 {
-			c.limit.Limit = metric.PlanLevel
-			c.limit.Remaining = metric.Remaining
-		}
-	}
 	return *c.limit
 }
