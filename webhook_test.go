@@ -8,8 +8,7 @@ import (
 func TestWebhook(t *testing.T) {
 	_, err := NewWebhook("")
 	if err == nil {
-		t.Errorf("NewWebhook: - %s", "an error should have occured")
-		return
+		t.Errorf("NewWebhook: - %s", "an error should have occurred")
 	}
 	webhook, err := NewWebhook("localhost/endpoint", "hookID", "callback")
 	if webhook.ID != "hookID" {
