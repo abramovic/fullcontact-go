@@ -11,8 +11,8 @@ func main() {
 	client, err := fullcontact.NewClient("")
 	fatalOnError(err)
 
-	// Webhook is optional.
-	webhook, err := fullcontact.NewWebhook("http://your-web-hook.url/", "ID-123")
+	// Webhook is optional and can be ommited.
+	_, err := fullcontact.NewWebhook("http://your-web-hook.url/", "ID-123")
 	fatalOnError(err)
 
 	// Look up bart@fullcontact.com by email address
