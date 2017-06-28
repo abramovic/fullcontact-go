@@ -9,9 +9,8 @@ func TestWebhook(t *testing.T) {
 	_, err := NewWebhook("")
 	if err == nil {
 		t.Errorf("NewWebhook: - %s", "an error should have occured")
-		return
 	}
-	webhook, err := NewWebhook("localhost/endpoint", "hookID", "callback")
+	webhook, _ := NewWebhook("localhost/endpoint", "hookID", "callback")
 	if webhook.ID != "hookID" {
 		t.Errorf("NewWebhook: - %s", "hook id was not properly set")
 	}
