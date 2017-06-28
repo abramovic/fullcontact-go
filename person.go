@@ -133,8 +133,8 @@ type PersonResponse struct {
 }
 
 // social returns back a social profile that matches the platform name
-func (self *PersonResponse) social(platform string) SocialProfile {
-	for _, profile := range self.SocialProfiles {
+func (pr *PersonResponse) social(platform string) SocialProfile {
+	for _, profile := range pr.SocialProfiles {
 		if profile.Type == platform {
 			return profile
 		}
@@ -215,6 +215,7 @@ type SocialProfile struct {
 	RSS       string   `json:"rss"`
 }
 
+// SocialID is a JSON serializable social identification
 type SocialID string
 
 // MarshalJSON takes SocialID and turns into a string
