@@ -12,7 +12,7 @@ type PersonAPI struct {
 	shared *Client
 }
 
-// Email returns a person based off of an email addres.
+// Email returns a person based off of an email address.
 func (c *PersonAPI) Email(value string, webhook *Webhook) (*PersonResponse, error) {
 	if value == "" {
 		return nil, fmt.Errorf("%s. Missing lookup value", errLibrary)
