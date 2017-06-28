@@ -237,7 +237,7 @@ var jsonPersonEmail = `{
     "url" : "https://about.me/lorangb",
     "username" : "lorangb"
   }, {
-    "bio" : "Entrepeneur, Tech Nerd; CEO and Co-Founder of @fullcontact. Passionate about solving the world's contact information problem and helping entrepreneurs.",
+    "bio" : "Entrepreneur, Tech Nerd; CEO and Co-Founder of @fullcontact. Passionate about solving the world's contact information problem and helping entrepreneurs.",
     "followers" : 2919,
     "type" : "angellist",
     "typeId" : "angellist",
