@@ -1,6 +1,8 @@
 package fullcontact
 
 import (
+	"crypto/md5"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -18,6 +20,30 @@ func (c *PersonAPI) Email(value string, webhook *Webhook) (*PersonResponse, erro
 		return nil, fmt.Errorf("%s. Missing lookup value", errLibrary)
 	}
 	r, err := c.shared.get("email", value, "person", webhook)
+	if err != nil {
+		return nil, err
+	}
+	return c.search(r)
+}
+
+// EmailMD5 returns a person based off the md5 hash of an email address
+func (c *PersonAPI) EmailMD5(value string, webhook *Webhook) (*PersonResponse, error) {
+	if value == "" {
+		return nil, fmt.Errorf("%s. Missing lookup value", errLibrary)
+	}
+	r, err := c.shared.get("emailMD5", value, "person", webhook)
+	if err != nil {
+		return nil, err
+	}
+	return c.search(r)
+}
+
+// EmailSHA256 returns a person based off the sha256 hash of an email address
+func (c *PersonAPI) EmailSHA256(value string, webhook *Webhook) (*PersonResponse, error) {
+	if value == "" {
+		return nil, fmt.Errorf("%s. Missing lookup value", errLibrary)
+	}
+	r, err := c.shared.get("emailSHA256", value, "person", webhook)
 	if err != nil {
 		return nil, err
 	}
@@ -63,4 +89,14 @@ func (c *PersonAPI) search(r *http.Request) (*PersonResponse, error) {
 		return nil, err
 	}
 	return &response, nil
+}
+
+// EmailToMD5 returns the md5 hash string of a given email address.
+func EmailToMD5(value string) string {
+	return fmt.Sprintf("%x", md5.Sum([]byte(value)))
+}
+
+// EmailToSHA256 returns the sha256 hash string of a given email address.
+func EmailToSHA256(value string) string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(value)))
 }
