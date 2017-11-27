@@ -21,7 +21,7 @@ func TestNewClient(t *testing.T) {
 	req404, _ := http.NewRequest("GET", "https://api.fullcontact.com/v3", nil)
 
 	_, err404 := client.do(req404)
-	if err404 != errStatus404 {
+	if err404 != ErrStatus404 {
 		t.Errorf("Expected 404 from FullContact")
 		return
 	}
@@ -29,14 +29,14 @@ func TestNewClient(t *testing.T) {
 	req403, _ := http.NewRequest("GET", "https://api.fullcontact.com/v2/company/lookup.json?domain=github.com&apiKey=abd123", nil)
 
 	_, err403 := client.do(req403)
-	if err403 != errStatus403 {
+	if err403 != ErrStatus403 {
 		t.Errorf("Expected 403 from FullContact")
 		return
 	}
 
 	req405, _ := http.NewRequest("DELETE", "https://api.fullcontact.com/v2/company/lookup.json?domain=github.com&apiKey=abd123", nil)
 	_, err405 := client.do(req405)
-	if err405 != errStatus405 {
+	if err405 != ErrStatus405 {
 		t.Errorf("Expected 405 from FullContact. Only GET and POST methods are allowed")
 		return
 	}
