@@ -64,22 +64,22 @@ func (c *Client) do(r *http.Request) (*http.Response, error) {
 	c.limit.Reset, _ = strconv.ParseInt(resp.Header.Get("X-Rate-Limit-Reset"), 0, 64)
 	c.limit.Updated = time.Now().UTC()
 	if resp.StatusCode == 400 {
-		return nil, errStatus400
+		return nil, ErrStatus400
 	}
 	if resp.StatusCode == 403 {
-		return nil, errStatus403
+		return nil, ErrStatus403
 	}
 	if resp.StatusCode == 404 {
-		return nil, errStatus404
+		return nil, ErrStatus404
 	}
 	if resp.StatusCode == 405 {
-		return nil, errStatus405
+		return nil, ErrStatus405
 	}
 	if resp.StatusCode == 422 {
-		return nil, errStatus422
+		return nil, ErrStatus422
 	}
 	if resp.StatusCode == 500 {
-		return nil, errStatus500
+		return nil, ErrStatus500
 	}
 	return resp, nil
 }

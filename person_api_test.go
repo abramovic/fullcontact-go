@@ -31,6 +31,58 @@ func TestPersonEmail(t *testing.T) {
 	}
 }
 
+func TestPersonEmailMD5(t *testing.T) {
+	client, _ := NewClient("")
+
+	_, missingEmail := client.Person.EmailMD5("", nil)
+	if missingEmail == nil {
+		t.Errorf("Person API: EmailMD5 - Error %v", "EmailMD5 is not valid. We should have gotten an error")
+		return
+	}
+
+	if os.Getenv("FULLCONTACT_API") == "" {
+		t.Skip("FULLCONTACT_API environment variable not set.")
+	}
+
+	target := EmailToMD5("bart@fullcontact.com")
+	email, err := client.Person.EmailMD5(target, nil)
+	if err != nil {
+		t.Errorf("Person API: EmailMD5 - Error %v", err.Error())
+		return
+	}
+
+	if email.Status != 200 {
+		t.Errorf("Person API: EmailMD5 - Got non-200 Status %v", email.Status)
+		return
+	}
+}
+
+func TestPersonEmailSHA256(t *testing.T) {
+	client, _ := NewClient("")
+
+	_, missingEmail := client.Person.EmailSHA256("", nil)
+	if missingEmail == nil {
+		t.Errorf("Person API: EmailSHA256 - Error %v", "EmailMD5 is not valid. We should have gotten an error")
+		return
+	}
+
+	if os.Getenv("FULLCONTACT_API") == "" {
+		t.Skip("FULLCONTACT_API environment variable not set.")
+	}
+
+	target := EmailToSHA256("bart@fullcontact.com")
+	email, err := client.Person.EmailSHA256(target, nil)
+	if err != nil {
+		t.Errorf("Person API: EmailSHA256 - Error %v", err.Error())
+		return
+	}
+
+	if email.Status != 200 {
+		t.Errorf("Person API: EmailSHA256 - Got non-200 Status %v", email.Status)
+		return
+	}
+}
+
 func TestPersonTwitter(t *testing.T) {
 	client, _ := NewClient("")
 
